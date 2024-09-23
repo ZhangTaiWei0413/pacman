@@ -1,0 +1,97 @@
+﻿<Window x:Class="PacmanGame.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pac-Man" Height="800" Width="2175"
+        KeyDown="Window_KeyDown">
+    <Grid x:Name="gameGrid" Margin="0,0,95,0">
+        <!-- 定义15x15的网格布局 -->
+        <Grid.ColumnDefinitions>
+            <!-- 生成15列 -->
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <!-- 生成15行 -->
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="pacman" Text="ᗧ" FontSize="48" Grid.Row="0" Grid.Column="0"/>
+        <TextBlock x:Name="blinky" Text="追" FontSize="48" Grid.Row="14" Grid.Column="14"/>
+        <TextBlock x:Name="pinky" Text="伏" FontSize="48" Grid.Row="14" Grid.Column="0"/>
+        <TextBlock x:Name="inky" Text="輔" FontSize="48" Grid.Row="0" Grid.Column="14"/>
+        <TextBlock x:Name="clyde" Text="雙" FontSize="48" Grid.Row="7" Grid.Column="7"/>
+
+
+        <!-- 示例墙壁 -->
+        <TextBlock Text="█" FontSize="48" Grid.Row="1" Grid.Column="1" />
+        <TextBlock Text="█" FontSize="48" Grid.Row="2" Grid.Column="1" />
+        <TextBlock Text="█" FontSize="48" Grid.Row="3" Grid.Column="1" />
+
+        <!-- Inky 的目标坐标显示 -->
+        <TextBlock x:Name="inkyTargetText" Text="Inky: " FontSize="10" Grid.Row="0" Grid.Column="15"
+           TextWrapping="Wrap" Width="75"/>
+
+        <!-- Pinky 的目标坐标显示 -->
+        <TextBlock x:Name="pinkyTargetText" Text="Pinky: " FontSize="10" Grid.Row="1" Grid.Column="15"
+           TextWrapping="Wrap" Width="75"/>
+
+        <!-- Blinky 的目标坐标显示 -->
+        <TextBlock x:Name="blinkyTargetText" Text="Blinky: " FontSize="10" Grid.Row="2" Grid.Column="15"
+           TextWrapping="Wrap" Width="75"/>
+
+        <!-- Clyde 的目标坐标显示 -->
+        <TextBlock x:Name="clydeTargetText" Text="Clyde: " FontSize="10" Grid.Row="3" Grid.Column="15"
+           TextWrapping="Wrap" Width="75"/>
+
+        <TextBlock x:Name="playerPositionText" Text="Player: " FontSize="10" Grid.Row="4" Grid.Column="15"
+           TextWrapping="Wrap" Width="75"/>
+
+
+        <!-- 示例豆子 -->
+        <TextBlock x:Name="dot1" Text="•" FontSize="36" Grid.Row="1" Grid.Column="3"/>
+        <TextBlock x:Name="dot2" Text="•" FontSize="36" Grid.Row="5" Grid.Column="5"/>
+        <TextBlock x:Name="dot3" Text="•" FontSize="36" Grid.Row="8" Grid.Column="8"/>
+    </Grid>
+</Window>
