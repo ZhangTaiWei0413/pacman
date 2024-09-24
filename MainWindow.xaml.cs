@@ -9,24 +9,24 @@ namespace PacmanGame
 {
     public partial class MainWindow : Window
     {
-        private int pacmanRow = 0;
-        private int pacmanCol = 0;
+        private int pacmanRow = 13;
+        private int pacmanCol = 15;
 
         // 新增玩家移動的定時器
         private DispatcherTimer playerMoveTimer;
         private Key lastKeyPressed = Key.None; // 記錄最後按下的方向鍵
 
-        private int blinkyRow = 14;
+        private int blinkyRow = 7;
         private int blinkyCol = 14;
 
-        private int pinkyRow = 14;
-        private int pinkyCol = 0;
+        private int pinkyRow = 6;
+        private int pinkyCol = 17;
 
-        private int inkyRow = 0;
-        private int inkyCol = 14;
+        private int inkyRow = 6;
+        private int inkyCol = 13;
 
         private int clydeRow = 7;
-        private int clydeCol = 7;
+        private int clydeCol = 16;
 
         private DispatcherTimer blinkyTimer;
         private DispatcherTimer pinkyTimer;
@@ -36,15 +36,19 @@ namespace PacmanGame
         private int dotsCollected = 0; // 已经收集的豆子数量
 
         private bool[,] walls = new bool[15, 30];  // 15x30 的地图
+        private bool[,] dots = new bool[15, 30];  // 追蹤豆子的狀態，true 表示該位置有豆子
+
 
         public MainWindow()
         {
             InitializeComponent();
-            InitializeWalls(); // 初始化墙壁数组
+            // 設置窗口最大化
+            this.WindowState = WindowState.Maximized;
+            InitializeWallsAndDots(); // 初始化墙壁数组
 
             // 初始化玩家的移動定時器，限制玩家移動速度
             playerMoveTimer = new DispatcherTimer();
-            playerMoveTimer.Interval = TimeSpan.FromSeconds(0.5); // 與鬼魂的速度相同
+            playerMoveTimer.Interval = TimeSpan.FromSeconds(0.5/1.08); // 與鬼魂的速度相同
             playerMoveTimer.Tick += PlayerMoveTimer_Tick;
             playerMoveTimer.Start();
 
@@ -71,11 +75,11 @@ namespace PacmanGame
 
             //blinkyTimer.Stop();
             //gameGrid.Children.Remove(blinky);
-            pinkyTimer.Stop();
+            //pinkyTimer.Stop();
             //gameGrid.Children.Remove(pinky);
-            inkyTimer.Stop();
+            //inkyTimer.Stop();
            // gameGrid.Children.Remove(inky);
-            clydeTimer.Stop();
+            //clydeTimer.Stop();
            // gameGrid.Children.Remove(clyde);
         }
 
@@ -85,6 +89,11 @@ namespace PacmanGame
             if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right)
             {
                 lastKeyPressed = e.Key;
+
+                Dispatcher.Invoke(() =>
+                {
+                    lastKeyText.Text = $"LastKey:\n {lastKeyPressed.ToString()}";
+                });
             }
         }
 
@@ -125,24 +134,22 @@ namespace PacmanGame
         // 檢查 Pac-Man 是否吃到豆子
         private void CheckForDotCollision()
         {
-            if (pacmanRow == Grid.GetRow(dot1) && pacmanCol == Grid.GetColumn(dot1))
+            if (dots[pacmanRow, pacmanCol]) // 如果當前格子有豆子
             {
-                dot1.Visibility = Visibility.Hidden; // 隱藏豆子
-                dotsCollected++;
-            }
-            if (pacmanRow == Grid.GetRow(dot2) && pacmanCol == Grid.GetColumn(dot2))
-            {
-                dot2.Visibility = Visibility.Hidden;
-                dotsCollected++;
-            }
-            if (pacmanRow == Grid.GetRow(dot3) && pacmanCol == Grid.GetColumn(dot3))
-            {
-                dot3.Visibility = Visibility.Hidden;
-                dotsCollected++;
+                dots[pacmanRow, pacmanCol] = false;  // 吃掉豆子
+                foreach (var child in gameGrid.Children)
+                {
+                    if (child is TextBlock textBlock && Grid.GetRow(textBlock) == pacmanRow && Grid.GetColumn(textBlock) == pacmanCol && textBlock.Text == "•")
+                    {
+                        textBlock.Visibility = Visibility.Hidden;  // 隱藏豆子
+                        dotsCollected++;
+                        break;
+                    }
+                }
             }
 
             // 如果所有豆子都被吃掉
-            if (dotsCollected == 3)
+            if (dotsCollected == GetTotalDotCount())
             {
                 // 停止所有定時器，暫停所有物件
                 playerMoveTimer.Stop(); // 停止玩家移動的定時器
@@ -164,16 +171,38 @@ namespace PacmanGame
             }
         }
 
-        // 初始化墙壁数组
-        private void InitializeWalls()
+        private int GetTotalDotCount()
+        {
+            int total = 0;
+            foreach (var child in gameGrid.Children)
+            {
+                if (child is TextBlock textBlock && textBlock.Text == "•")
+                {
+                    total++;
+                }
+            }
+            return total;
+        }
+
+
+        // 初始化墙壁和豆子数组
+        private void InitializeWallsAndDots()
         {
             foreach (var child in gameGrid.Children)
             {
-                if (child is TextBlock textBlock && textBlock.Text == "█")
+                if (child is TextBlock textBlock)
                 {
                     int row = Grid.GetRow(textBlock);
                     int col = Grid.GetColumn(textBlock);
-                    walls[row, col] = true;  // 标记这个位置是墙
+
+                    if (textBlock.Text == "█")
+                    {
+                        walls[row, col] = true;  // 這個位置是牆壁
+                    }
+                    else if (textBlock.Text == "•")
+                    {
+                        dots[row, col] = true;   // 這個位置是豆子
+                    }
                 }
             }
         }
@@ -219,6 +248,9 @@ namespace PacmanGame
             // 使用 BFS 尋找通往 Pac-Man 預測位置的最短路徑
             MoveGhostUsingBFS(ref pinkyRow, ref pinkyCol, targetRow, targetCol);
 
+            // 確保 Pinky 的行和列值在有效範圍內
+            pinkyRow = Math.Max(0, Math.Min(pinkyRow, 14));  // 行的範圍是 0 到 14
+            pinkyCol = Math.Max(0, Math.Min(pinkyCol, 29));  // 列的範圍是 0 到 29
             Grid.SetRow(pinky, pinkyRow);
             Grid.SetColumn(pinky, pinkyCol);
 
@@ -247,6 +279,10 @@ namespace PacmanGame
 
             // 使用 BFS 讓 Inky 找到最短路徑
             MoveGhostUsingBFS(ref inkyRow, ref inkyCol, targetRow, targetCol);
+
+            // 確保 Inky 的行和列值在有效範圍內
+            inkyRow = Math.Max(0, Math.Min(inkyRow, 14));  // 行的範圍是 0 到 14
+            inkyCol = Math.Max(0, Math.Min(inkyCol, 29));  // 列的範圍是 0 到 29
 
             // 更新 Inky 位置
             Grid.SetRow(inky, inkyRow);
@@ -330,7 +366,29 @@ namespace PacmanGame
                 EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow, currentCol + 1);  // 向右
                 EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow, currentCol - 1);  // 向左
             }
+
+            // 如果沒有找到有效路徑，隨機移動
+            List<(int row, int col)> possibleMoves = new List<(int row, int col)>();
+
+            if (!IsWall(ghostRow - 1, ghostCol)) possibleMoves.Add((ghostRow - 1, ghostCol)); // 向上
+            if (!IsWall(ghostRow + 1, ghostCol)) possibleMoves.Add((ghostRow + 1, ghostCol)); // 向下
+            if (!IsWall(ghostRow, ghostCol - 1)) possibleMoves.Add((ghostRow, ghostCol - 1)); // 向左
+            if (!IsWall(ghostRow, ghostCol + 1)) possibleMoves.Add((ghostRow, ghostCol + 1)); // 向右
+
+            if (possibleMoves.Count > 0)
+            {
+                Random rand = new Random();
+                var nextMove = possibleMoves[rand.Next(possibleMoves.Count)];
+                ghostRow = nextMove.row;
+                ghostCol = nextMove.col;
+            }
         }
+
+        private bool IsSurroundedByWalls(int row, int col)
+        {
+            return IsWall(row - 1, col) && IsWall(row + 1, col) && IsWall(row, col - 1) && IsWall(row, col + 1);
+        }
+
 
         // 設定鬼魂移動一格的回溯邏輯
         private (int nextRow, int nextCol) GetNextMove(int startRow, int startCol, int targetRow, int targetCol, (int, int)[,] parent)
@@ -350,10 +408,11 @@ namespace PacmanGame
         // 確保將相鄰的有效節點加入到 BFS 隊列
         private void EnqueueIfValid(Queue<(int row, int col)> queue, bool[,] visited, (int, int)[,] parent, int currentRow, int currentCol, int newRow, int newCol)
         {
+            // 確保新行列值在地圖範圍內，且沒有被訪問過且不是牆壁
             if (newRow >= 0 && newRow < 15 && newCol >= 0 && newCol < 30 && !visited[newRow, newCol] && !IsWall(newRow, newCol))
             {
-                queue.Enqueue((newRow, newCol));
-                visited[newRow, newCol] = true;
+                queue.Enqueue((newRow, newCol));  // 將新的合法節點加入隊列
+                visited[newRow, newCol] = true;   // 標記已訪問
                 parent[newRow, newCol] = (currentRow, currentCol);  // 記錄父節點
             }
         }
@@ -396,8 +455,6 @@ namespace PacmanGame
         private void ResetGame()
         {
             // 重置 Pac-Man 的位置
-            pacmanRow = 0;
-            pacmanCol = 0;
             Grid.SetRow(pacman, pacmanRow);
             Grid.SetColumn(pacman, pacmanCol);
 
@@ -424,12 +481,6 @@ namespace PacmanGame
             clydeCol = 7;
             Grid.SetRow(clyde, clydeRow);
             Grid.SetColumn(clyde, clydeCol);
-
-            // 重置已经收集的豆子（如果有）
-            dotsCollected = 0;
-            dot1.Visibility = Visibility.Visible;
-            dot2.Visibility = Visibility.Visible;
-            dot3.Visibility = Visibility.Visible;
 
             // 重新启动鬼魂的定时器
             blinkyTimer.Start();
