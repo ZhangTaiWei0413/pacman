@@ -208,7 +208,6 @@ namespace PacmanGame
 
             CheckForGameOver();  // 檢查遊戲是否結束
         }
-
         private void PinkyTimer_Tick(object sender, EventArgs e)
         {
             int targetRow = pacmanRow;
@@ -260,20 +259,20 @@ namespace PacmanGame
                     break;
             }
 
-            (int nextRow, int nextCol) = MoveGhostUsingBFS(pinkyRow, pinkyCol, targetRow, targetCol);  // 使用 BFS 移動
+            (int nextRow, int nextCol) = MoveGhostUsingBFS(pinkyRow, pinkyCol, targetRow, targetCol);
 
-            pinkyRow = Math.Max(0, Math.Min(nextRow, 14));  // 限制行範圍
-            pinkyCol = Math.Max(0, Math.Min(nextCol, 29));  // 限制列範圍
+            pinkyRow = Math.Max(0, Math.Min(nextRow, 14));  // 确保行范围正确
+            pinkyCol = Math.Max(0, Math.Min(nextCol, 29));  // 确保列范围正确
 
-            Grid.SetRow(pinky, pinkyRow);  // 更新 Pinky 的位置
+            Grid.SetRow(pinky, pinkyRow);
             Grid.SetColumn(pinky, pinkyCol);
 
             Dispatcher.Invoke(() =>
             {
-                pinkyTargetText.Text = $"Pinky:\n({targetRow}, {targetCol})";  // 更新目標位置
+                pinkyTargetText.Text = $"Pinky:\n ({targetRow}, {targetCol})";
             });
 
-            CheckForGameOver();  // 檢查遊戲是否結束
+            CheckForGameOver();
         }
 
         private void InkyTimer_Tick(object sender, EventArgs e)
@@ -359,65 +358,74 @@ namespace PacmanGame
 
             CheckForGameOver();  // 檢查遊戲是否結束
         }
-
         private (int, int) MoveGhostUsingBFS(int ghostRow, int ghostCol, int targetRow, int targetCol)
         {
-            Queue<(int row, int col)> queue = new Queue<(int row, int col)>();  // BFS 隊列
-            bool[,] visited = new bool[15, 30];  // 記錄訪問狀態
-            (int row, int col)[,] parent = new (int, int)[15, 30];  // 記錄父節點
+            Queue<(int row, int col)> queue = new Queue<(int row, int col)>();
+            bool[,] visited = new bool[15, 30];
+            (int row, int col)[,] parent = new (int, int)[15, 30];
 
-            queue.Enqueue((ghostRow, ghostCol));  // 將鬼魂初始位置加入隊列
+            queue.Enqueue((ghostRow, ghostCol));
             visited[ghostRow, ghostCol] = true;
-            parent[ghostRow, ghostCol] = (-1, -1);  // 根節點沒有父節點
+            parent[ghostRow, ghostCol] = (-1, -1);
 
             while (queue.Count > 0)
             {
                 var (currentRow, currentCol) = queue.Dequeue();
 
-                if (currentRow == targetRow && currentCol == targetCol)  // 找到目標
+                // 當找到目標位置時，回溯找到下一步移動位置
+                if (currentRow == targetRow && currentCol == targetCol)
                 {
-                    return GetNextMove(ghostRow, ghostCol, targetRow, targetCol, parent);  // 回溯並返回下一步
+                    return GetNextMove(ghostRow, ghostCol, targetRow, targetCol, parent);
                 }
 
-                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow + 1, currentCol);  // 向下擴展
-                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow - 1, currentCol);  // 向上擴展
-                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow, currentCol + 1);  // 向右擴展
-                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow, currentCol - 1);  // 向左擴展
+                // 擴展鄰居節點，加入合法的移動
+                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow + 1, currentCol);  // 向下
+                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow - 1, currentCol);  // 向上
+                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow, currentCol + 1);  // 向右
+                EnqueueIfValid(queue, visited, parent, currentRow, currentCol, currentRow, currentCol - 1);  // 向左
             }
 
-            List<(int row, int col)> possibleMoves = new List<(int row, int col)>();  // 如果沒有找到路徑，嘗試隨機移動
+            // 如果沒有找到有效路徑，隨機選擇下一步或保持原地不動
+            List<(int row, int col)> possibleMoves = new List<(int row, int col)>();
 
-            if (!IsWall(ghostRow - 1, ghostCol)) possibleMoves.Add((ghostRow - 1, ghostCol));  // 向上移動
-            if (!IsWall(ghostRow + 1, ghostCol)) possibleMoves.Add((ghostRow + 1, ghostCol));  // 向下移動
-            if (!IsWall(ghostRow, ghostCol - 1)) possibleMoves.Add((ghostRow, ghostCol - 1));  // 向左移動
-            if (!IsWall(ghostRow, ghostCol + 1)) possibleMoves.Add((ghostRow, ghostCol + 1));  // 向右移動
+            if (!IsWall(ghostRow - 1, ghostCol)) possibleMoves.Add((ghostRow - 1, ghostCol)); // 向上
+            if (!IsWall(ghostRow + 1, ghostCol)) possibleMoves.Add((ghostRow + 1, ghostCol)); // 向下
+            if (!IsWall(ghostRow, ghostCol - 1)) possibleMoves.Add((ghostRow, ghostCol - 1)); // 向左
+            if (!IsWall(ghostRow, ghostCol + 1)) possibleMoves.Add((ghostRow, ghostCol + 1)); // 向右
 
             if (possibleMoves.Count > 0)
             {
                 Random rand = new Random();
                 var nextMove = possibleMoves[rand.Next(possibleMoves.Count)];
-                return (nextMove.row, nextMove.col);  // 隨機返回下一步
+                return (nextMove.row, nextMove.col);
             }
 
-            return (ghostRow, ghostCol);  // 無路可走時原地不動
+            // 保持原地不動
+            return (ghostRow, ghostCol);
         }
 
         private bool IsSurroundedByWalls(int row, int col)
         {
             return IsWall(row - 1, col) && IsWall(row + 1, col) && IsWall(row, col - 1) && IsWall(row, col + 1);  // 檢查是否被牆包圍
         }
-
         private (int nextRow, int nextCol) GetNextMove(int startRow, int startCol, int targetRow, int targetCol, (int, int)[,] parent)
         {
             int row = targetRow;
             int col = targetCol;
 
-            while (row >= 0 && col >= 0 && parent[row, col] != (startRow, startCol))  // 回溯找到下一步
+            // 如果目標點在父節點表中沒有回溯路徑，則返回當前鬼魂的位置
+            if (parent[row, col] == (-1, -1))  // 無法找到父節點
+            {
+                return (startRow, startCol);  // 保持原地不動
+            }
+
+            // 回溯從目標到當前位置的路徑，找到下一步要移動的節點
+            while (parent[row, col] != (startRow, startCol))
             {
                 (row, col) = parent[row, col];
             }
 
-            return (row, col);  // 返回下一步位置
+            return (row, col);
         }
 
         private void EnqueueIfValid(Queue<(int row, int col)> queue, bool[,] visited, (int, int)[,] parent, int currentRow, int currentCol, int newRow, int newCol)
