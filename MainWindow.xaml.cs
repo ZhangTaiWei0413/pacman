@@ -274,19 +274,69 @@ namespace PacmanGame
 
             CheckForGameOver();
         }
-
         private void InkyTimer_Tick(object sender, EventArgs e)
         {
-            int vectorRow = pacmanRow - blinkyRow;
-            int vectorCol = pacmanCol - blinkyCol;
+            int targetRow = pacmanRow;
+            int targetCol = pacmanCol;
 
-            int targetRow = pacmanRow + vectorRow;  // Inky 的目標是基於 Blinky 和 Pac-Man 的位置
-            int targetCol = pacmanCol + vectorCol;
+            int maxDistance = 2;  // 你可以設定 Inky 鎖定 Pac-Man 前方幾格，這裡設定為 2 格
 
-            targetRow = Math.Max(0, Math.Min(targetRow, 14));  // 限制行範圍
-            targetCol = Math.Max(0, Math.Min(targetCol, 29));  // 限制列範圍
+            // 根據最後按下的方向鍵來計算 Pac-Man 前方的位置
+            switch (lastKeyPressed)
+            {
+                case Key.Up:
+                    for (int distance = maxDistance; distance >= 0; distance--)
+                    {
+                        if (targetRow - distance >= 0 && !IsWall(targetRow - distance, targetCol))
+                        {
+                            targetRow -= distance;
+                            break;
+                        }
+                    }
+                    break;
+                case Key.Down:
+                    for (int distance = maxDistance; distance >= 0; distance--)
+                    {
+                        if (targetRow + distance < 15 && !IsWall(targetRow + distance, targetCol))
+                        {
+                            targetRow += distance;
+                            break;
+                        }
+                    }
+                    break;
+                case Key.Left:
+                    for (int distance = maxDistance; distance >= 0; distance--)
+                    {
+                        if (targetCol - distance >= 0 && !IsWall(targetRow, targetCol - distance))
+                        {
+                            targetCol -= distance;
+                            break;
+                        }
+                    }
+                    break;
+                case Key.Right:
+                    for (int distance = maxDistance; distance >= 0; distance--)
+                    {
+                        if (targetCol + distance < 30 && !IsWall(targetRow, targetCol + distance))
+                        {
+                            targetCol += distance;
+                            break;
+                        }
+                    }
+                    break;
+            }
 
-            (int nextRow, int nextCol) = MoveGhostUsingBFS(inkyRow, inkyCol, targetRow, targetCol);  // 使用 BFS 移動
+            // 保持原來 Inky 基於 Blinky 和 Pac-Man 的向量計算邏輯
+            int vectorRow = targetRow - blinkyRow;
+            int vectorCol = targetCol - blinkyCol;
+
+            int finalTargetRow = pacmanRow + vectorRow;  // Inky 的最終目標是基於 Blinky 和 Pac-Man 的相對位置
+            int finalTargetCol = pacmanCol + vectorCol;
+
+            finalTargetRow = Math.Max(0, Math.Min(finalTargetRow, 14));  // 限制行範圍
+            finalTargetCol = Math.Max(0, Math.Min(finalTargetCol, 29));  // 限制列範圍
+
+            (int nextRow, int nextCol) = MoveGhostUsingBFS(inkyRow, inkyCol, finalTargetRow, finalTargetCol);  // 使用 BFS 移動
 
             inkyRow = Math.Max(0, Math.Min(nextRow, 14));  // 更新 Inky 的行
             inkyCol = Math.Max(0, Math.Min(nextCol, 29));  // 更新 Inky 的列
@@ -296,7 +346,7 @@ namespace PacmanGame
 
             Dispatcher.Invoke(() =>
             {
-                inkyTargetText.Text = $"Inky:\n ({targetRow}, {targetCol})";  // 更新目標位置
+                inkyTargetText.Text = $"Inky:\n ({finalTargetRow}, {finalTargetCol})";  // 更新目標位置
             });
 
             CheckForGameOver();  // 檢查遊戲是否結束
